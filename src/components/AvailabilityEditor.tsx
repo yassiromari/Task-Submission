@@ -7,7 +7,9 @@ import type {
 
 interface AvailabilityEditorProps {
   availability: StudentAvailability[];
-  onUpsertAvailability: (entry: Omit<StudentAvailability, "id">) => void;
+  onUpsertAvailability: (
+    entry: Omit<StudentAvailability, "id">,
+  ) => Promise<boolean>;
 }
 
 const STUDENTS: StudentName[] = ["Yassir", "Mihai"];
@@ -26,16 +28,18 @@ export function AvailabilityEditor({
   const [status, setStatus] = useState<AvailabilityStatus>("Available");
   const [location, setLocation] = useState("");
   const [note, setNote] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const sortedEntries = useMemo(
     () => [...availability].sort((a, b) => a.workDate.localeCompare(b.workDate)),
     [availability],
   );
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setIsSubmitting(true);
 
-    onUpsertAvailability({
+    const success = await onUpsertAvailability({
       student,
       workDate,
       availability: status,
@@ -43,8 +47,12 @@ export function AvailabilityEditor({
       note: note.trim() || undefined,
     });
 
-    setLocation("");
-    setNote("");
+    if (success) {
+      setLocation("");
+      setNote("");
+    }
+
+    setIsSubmitting(false);
   };
 
   return (
@@ -114,8 +122,8 @@ export function AvailabilityEditor({
           />
         </label>
 
-        <button type="submit" className="submit-btn">
-          Save availability
+        <button type="submit" className="submit-btn" disabled={isSubmitting}>
+          {isSubmitting ? "Saving..." : "Save availability"}
         </button>
       </form>
 

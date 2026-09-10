@@ -60,6 +60,56 @@ npm run build
 npm run preview
 ```
 
+## Connect to Supabase
+
+This app now supports shared data via Supabase so availability/tasks persist across refresh and across devices.
+
+1. Create a Supabase project.
+2. In Supabase SQL Editor, run:
+
+```sql
+create table if not exists availability (
+   id uuid primary key default gen_random_uuid(),
+   student text not null check (student in ('Yassir', 'Mihai')),
+   work_date date not null,
+   availability text not null check (availability in ('Available', 'Partially Available', 'Unavailable')),
+   location text,
+   note text,
+   unique (student, work_date)
+);
+
+create table if not exists tasks (
+   id uuid primary key default gen_random_uuid(),
+   title text not null,
+   description text not null,
+   priority text not null check (priority in ('Low', 'Medium', 'High', 'Urgent')),
+   deadline date not null,
+   assigned_student text not null check (assigned_student in ('Yassir', 'Mihai')),
+   clarification_meeting_needed boolean not null default false,
+   notes_or_links text,
+   requested_by text not null,
+   status text not null check (status in ('New', 'In Progress', 'Blocked', 'Done')),
+   created_at timestamptz not null default now()
+);
+```
+
+3. Enable Row Level Security and add policies allowing reads/writes for your intended users.
+4. Create a local env file from [\.env.example](.env.example):
+
+```powershell
+copy .env.example .env.local
+```
+
+5. Fill in your real values in .env.local:
+    - VITE_SUPABASE_URL
+    - VITE_SUPABASE_ANON_KEY
+
+6. Restart dev server:
+
+```powershell
+npm run dev
+```
+
 ---
 
 ## Phase 2 — Future Microsoft Teams integration

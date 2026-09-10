@@ -251,6 +251,21 @@ body {
   background: #005a9e;
 }
 
+.submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.sync-message {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #605e5c;
+}
+
+.sync-error {
+  color: #a4262c;
+}
+
 .nav-btn {
   background: #0078d4;
   color: #ffffff;

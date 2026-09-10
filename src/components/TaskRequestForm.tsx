@@ -7,7 +7,7 @@ import type {
 } from "../types";
 
 interface TaskRequestFormProps {
-  onSubmit: (task: TaskRequestDraft) => void;
+  onSubmit: (task: TaskRequestDraft) => Promise<boolean>;
   getSuggestedAssignee: (deadline: string) => StudentName;
 }
 
@@ -41,13 +41,15 @@ export function TaskRequestForm({
   getSuggestedAssignee,
 }: TaskRequestFormProps) {
   const [form, setForm] = useState<FormState>(INITIAL_STATE);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
     const taskDraft: TaskRequestDraft = {
       title: form.title.trim(),
@@ -60,8 +62,12 @@ export function TaskRequestForm({
       status: form.status,
     };
 
-    onSubmit(taskDraft);
-    setForm(INITIAL_STATE);
+    const success = await onSubmit(taskDraft);
+    if (success) {
+      setForm(INITIAL_STATE);
+    }
+
+    setIsSubmitting(false);
   };
 
   const suggestedAssignee = form.deadline
@@ -173,8 +179,8 @@ export function TaskRequestForm({
         />
       </label>
 
-      <button type="submit" className="submit-btn">
-        Submit task request
+      <button type="submit" className="submit-btn" disabled={isSubmitting}>
+        {isSubmitting ? "Submitting..." : "Submit task request"}
       </button>
     </form>
   );

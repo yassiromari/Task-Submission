@@ -5,6 +5,13 @@ import { TaskRequestForm } from "./components/TaskRequestForm";
 import { TaskList } from "./components/TaskList";
 import { sampleAvailability } from "./data/sampleAvailability";
 import {
+  createTaskEntry,
+  fetchAvailability,
+  fetchTasks,
+  isSupabaseConfigured,
+  upsertAvailabilityEntry,
+} from "./lib/supabase";
+import {
   STUDENT_COLORS,
   type AvailabilityStatus,
   type StudentAvailability,
@@ -15,19 +22,6 @@ import {
 import "./App.css";
 
 const OPEN_STATUSES = new Set(["New", "In Progress", "Blocked"]);
-const AVAILABILITY_STORAGE_KEY = "student-calendar.availability";
-const TASKS_STORAGE_KEY = "student-calendar.tasks";
-
-function readStoredList<T>(key: string): T[] {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as T[]) : [];
-  } catch {
-    return [];
-  }
-}
 
 function getAvailabilityScore(status: AvailabilityStatus | undefined): number {
   switch (status) {
@@ -47,21 +41,58 @@ function App() {
   const [activePage, setActivePage] = useState<"dashboard" | "availability">(
     "dashboard",
   );
-  const [availability, setAvailability] = useState<StudentAvailability[]>(() => {
-    const stored = readStoredList<StudentAvailability>(AVAILABILITY_STORAGE_KEY);
-    return stored.length > 0 ? stored : sampleAvailability;
-  });
-  const [tasks, setTasks] = useState<TaskRequest[]>(() =>
-    readStoredList<TaskRequest>(TASKS_STORAGE_KEY),
+  const [availability, setAvailability] = useState<StudentAvailability[]>(
+    sampleAvailability,
   );
+  const [tasks, setTasks] = useState<TaskRequest[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [syncError, setSyncError] = useState<string | null>(null);
 
   useEffect(() => {
-    localStorage.setItem(AVAILABILITY_STORAGE_KEY, JSON.stringify(availability));
-  }, [availability]);
+    let isMounted = true;
 
-  useEffect(() => {
-    localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks));
-  }, [tasks]);
+    const loadData = async () => {
+      if (!isSupabaseConfigured) {
+        setSyncError(
+          "Supabase is not configured yet. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to connect shared data.",
+        );
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const [availabilityRows, taskRows] = await Promise.all([
+          fetchAvailability(),
+          fetchTasks(),
+        ]);
+
+        if (!isMounted) return;
+
+        setAvailability(
+          availabilityRows.length > 0 ? availabilityRows : sampleAvailability,
+        );
+        setTasks(taskRows);
+        setSyncError(null);
+      } catch (error) {
+        if (!isMounted) return;
+        setSyncError(
+          error instanceof Error
+            ? `Supabase sync error: ${error.message}`
+            : "Failed to load data from Supabase.",
+        );
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void loadData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const getSuggestedAssignee = (deadline: string): StudentName => {
     const students = Object.keys(STUDENT_COLORS) as StudentName[];
@@ -98,46 +129,53 @@ function App() {
     return scored[0].student;
   };
 
-  const handleUpsertAvailability = (
+  const handleUpsertAvailability = async (
     nextAvailability: Omit<StudentAvailability, "id">,
-  ) => {
-    setAvailability((prev) => {
-      const existing = prev.find(
-        (entry) =>
-          entry.student === nextAvailability.student &&
-          entry.workDate === nextAvailability.workDate,
+  ): Promise<boolean> => {
+    if (!isSupabaseConfigured) return false;
+
+    try {
+      const saved = await upsertAvailabilityEntry(nextAvailability);
+      setAvailability((prev) => {
+        const existing = prev.find((entry) => entry.id === saved.id);
+        if (existing) {
+          return prev.map((entry) => (entry.id === saved.id ? saved : entry));
+        }
+
+        return [saved, ...prev];
+      });
+      setSyncError(null);
+      return true;
+    } catch (error) {
+      setSyncError(
+        error instanceof Error
+          ? `Could not save availability: ${error.message}`
+          : "Could not save availability.",
       );
-
-      if (existing) {
-        return prev.map((entry) =>
-          entry.id === existing.id ? { ...entry, ...nextAvailability } : entry,
-        );
-      }
-
-      return [
-        {
-          id: crypto.randomUUID(),
-          ...nextAvailability,
-        },
-        ...prev,
-      ];
-    });
+      return false;
+    }
   };
 
-  const handleNewTask = (taskDraft: TaskRequestDraft) => {
-    const task: TaskRequest = {
-      id: crypto.randomUUID(),
-      assignedStudent: getSuggestedAssignee(taskDraft.deadline),
-      createdAt: new Date().toISOString(),
-      ...taskDraft,
-    };
+  const handleNewTask = async (taskDraft: TaskRequestDraft): Promise<boolean> => {
+    if (!isSupabaseConfigured) return false;
 
-    // For the local prototype we keep tasks in component state.
-    // When wired up to a backend (Dataverse / SharePoint / Graph / API),
-    // this is the integration point.
-    // eslint-disable-next-line no-console
-    console.log("New task request submitted:", task);
-    setTasks((prev) => [task, ...prev]);
+    const assignedStudent = getSuggestedAssignee(taskDraft.deadline);
+
+    try {
+      const task = await createTaskEntry(taskDraft, assignedStudent);
+      // eslint-disable-next-line no-console
+      console.log("New task request submitted:", task);
+      setTasks((prev) => [task, ...prev]);
+      setSyncError(null);
+      return true;
+    } catch (error) {
+      setSyncError(
+        error instanceof Error
+          ? `Could not create task: ${error.message}`
+          : "Could not create task.",
+      );
+      return false;
+    }
   };
 
   return (
@@ -173,6 +211,9 @@ function App() {
           )}
         </div>
       </header>
+
+      {syncError && <p className="sync-message sync-error">{syncError}</p>}
+      {isLoading && <p className="sync-message">Loading shared data...</p>}
 
       {activePage === "availability" ? (
         <main className="single-page-main">
