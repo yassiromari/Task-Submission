@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import type {
   Priority,
+  RequestTarget,
   StudentName,
   TaskRequestDraft,
   TaskStatus,
@@ -15,6 +16,7 @@ interface TaskRequestFormProps {
 const PRIORITIES: Priority[] = ["Low", "Medium", "High", "Urgent"];
 const STATUSES: TaskStatus[] = ["New", "In Progress", "Blocked", "Done"];
 const ALL_ASSIGNEES: StudentName[] = ["Yassir", "Mihai"];
+const REQUEST_TARGETS: RequestTarget[] = ["Either", "Both", ...ALL_ASSIGNEES];
 
 interface FormState {
   title: string;
@@ -45,9 +47,7 @@ export function TaskRequestForm({
 }: TaskRequestFormProps) {
   const [form, setForm] = useState<FormState>(INITIAL_STATE);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedAssignee, setSelectedAssignee] = useState<"auto" | StudentName>(
-    "auto",
-  );
+  const [requestTarget, setRequestTarget] = useState<RequestTarget>("Either");
 
   const handleChange = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -66,14 +66,13 @@ export function TaskRequestForm({
       notesOrLinks: form.notesOrLinks.trim() || undefined,
       requestedBy: form.requestedBy.trim(),
       status: form.status,
-      selectedAssignee:
-        selectedAssignee === "auto" ? undefined : selectedAssignee,
+      requestTarget,
     };
 
     const success = await onSubmit(taskDraft);
     if (success) {
       setForm(INITIAL_STATE);
-      setSelectedAssignee("auto");
+      setRequestTarget("Either");
     }
 
     setIsSubmitting(false);
@@ -93,10 +92,13 @@ export function TaskRequestForm({
   );
 
   useEffect(() => {
-    if (selectedAssignee !== "auto" && !assigneeOptions.includes(selectedAssignee)) {
-      setSelectedAssignee("auto");
+    if (
+      (requestTarget === "Yassir" || requestTarget === "Mihai") &&
+      !assigneeOptions.includes(requestTarget)
+    ) {
+      setRequestTarget("Either");
     }
-  }, [assigneeOptions, selectedAssignee]);
+  }, [assigneeOptions, requestTarget]);
 
   return (
     <form className="task-form" onSubmit={handleSubmit}>
@@ -166,23 +168,36 @@ export function TaskRequestForm({
         </label>
 
         <label className="form-field">
-          <span>Assignee</span>
+          <span>Request For</span>
           <select
-            value={selectedAssignee}
-            onChange={(e) =>
-              setSelectedAssignee(e.target.value as "auto" | StudentName)
-            }
+            value={requestTarget}
+            onChange={(e) => setRequestTarget(e.target.value as RequestTarget)}
           >
-            <option value="auto">
-              {suggestedAssignee
-                ? `Auto (${suggestedAssignee})`
-                : "Auto (No one marked available)"}
-            </option>
-            {assigneeOptions.map((name) => (
-              <option key={name} value={name}>
-                {name}
-              </option>
-            ))}
+            {REQUEST_TARGETS.map((target) => {
+              if (target === "Either") {
+                return (
+                  <option key={target} value={target}>
+                    {suggestedAssignee
+                      ? `Either (Smart pick: ${suggestedAssignee})`
+                      : "Either (No one marked available)"}
+                  </option>
+                );
+              }
+
+              if (target === "Both") {
+                return (
+                  <option key={target} value={target}>
+                    Both (Creates one task per student)
+                  </option>
+                );
+              }
+
+              return (
+                <option key={target} value={target}>
+                  {target}
+                </option>
+              );
+            })}
           </select>
         </label>
       </div>
@@ -194,6 +209,10 @@ export function TaskRequestForm({
         <p className="sync-message sync-error">
           No one is marked available on this deadline yet.
         </p>
+      )}
+
+      {requestTarget === "Both" && (
+        <p className="sync-message">This request will create one task for Yassir and one for Mihai.</p>
       )}
 
       <label className="form-field checkbox-field">

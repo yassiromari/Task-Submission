@@ -207,21 +207,34 @@ function App() {
   const handleNewTask = async (taskDraft: TaskRequestDraft): Promise<boolean> => {
     if (!isSupabaseConfigured) return false;
 
-    const assignedStudent =
-      taskDraft.selectedAssignee ?? getSuggestedAssignee(taskDraft.deadline);
-
-    if (!assignedStudent) {
-      setSyncError(
-        "No one is marked available for that deadline. Pick a different date or add availability first.",
-      );
-      return false;
-    }
-
     try {
-      const task = await createTaskEntry(taskDraft, assignedStudent);
+      const students = Object.keys(STUDENT_COLORS) as StudentName[];
+      let createdTasks: TaskRequest[] = [];
+
+      if (taskDraft.requestTarget === "Both") {
+        createdTasks = await Promise.all(
+          students.map((student) => createTaskEntry(taskDraft, student)),
+        );
+      } else {
+        const assignedStudent =
+          taskDraft.requestTarget === "Either"
+            ? getSuggestedAssignee(taskDraft.deadline)
+            : taskDraft.requestTarget;
+
+        if (!assignedStudent) {
+          setSyncError(
+            "No one is marked available for that deadline. Pick a different date, choose a specific person, or add availability first.",
+          );
+          return false;
+        }
+
+        const task = await createTaskEntry(taskDraft, assignedStudent);
+        createdTasks = [task];
+      }
+
       // eslint-disable-next-line no-console
-      console.log("New task request submitted:", task);
-      setTasks((prev) => [task, ...prev]);
+      console.log("New task request submitted:", createdTasks);
+      setTasks((prev) => [...createdTasks, ...prev]);
       setSyncError(null);
       return true;
     } catch (error) {

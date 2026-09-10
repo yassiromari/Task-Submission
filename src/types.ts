@@ -34,6 +34,7 @@ export interface StudentAvailability {
 export type Priority = "Low" | "Medium" | "High" | "Urgent";
 
 export type TaskStatus = "New" | "In Progress" | "Blocked" | "Done";
+export type RequestTarget = StudentName | "Either" | "Both";
 
 export interface TaskRequest {
   id: string;
@@ -55,7 +56,7 @@ export type TaskRequestDraft = Omit<
   TaskRequest,
   "id" | "assignedStudent" | "createdAt" | "deletedAt" | "deletedBy"
 > & {
-  selectedAssignee?: StudentName;
+  requestTarget: RequestTarget;
 };
 
 export type TaskUpdateDraft = Omit<TaskRequest, "createdAt" | "deletedAt" | "deletedBy">;
