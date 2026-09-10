@@ -66,6 +66,11 @@ export function AvailabilityCalendar({ availability }: AvailabilityCalendarProps
     eventInfo.el.title = lines.join("\n");
   };
 
+  const getEventClassNames = (eventInfo: { event: { extendedProps: { note?: string } } }) => {
+    const hasNote = Boolean(eventInfo.event.extendedProps.note?.trim());
+    return hasNote ? ["calendar-has-note"] : [];
+  };
+
   return (
     <div className="calendar-card">
       <FullCalendar
@@ -80,6 +85,7 @@ export function AvailabilityCalendar({ availability }: AvailabilityCalendarProps
         height="auto"
         firstDay={1}
         eventDisplay="block"
+        eventClassNames={getEventClassNames}
         eventContent={renderEventContent}
         eventDidMount={setEventTooltip}
       />

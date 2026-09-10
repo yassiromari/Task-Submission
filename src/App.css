@@ -223,6 +223,24 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-height: 1.2em;
+  transition: max-height 0.25s ease;
+}
+
+.fc-event.calendar-has-note {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fc-event.calendar-has-note:hover {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.18);
+  z-index: 5;
+}
+
+.fc-event.calendar-has-note:hover .calendar-event-note {
+  white-space: normal;
+  text-overflow: clip;
+  max-height: 6em;
 }
 
 /* Task form */
