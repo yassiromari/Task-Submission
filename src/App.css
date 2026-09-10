@@ -16,18 +16,129 @@ body,
 }
 
 body {
-  font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  font-family: "Trebuchet MS", "Century Gothic", "Segoe UI", sans-serif;
   color: #1f1f1f;
-  background: #f3f2f1;
+  background:
+    linear-gradient(180deg, #eaf7ff 0%, #fff9dc 56%, #ffe8cc 100%),
+    radial-gradient(circle at 16px 16px, rgba(255, 255, 255, 0.55) 6px, transparent 7px);
+  background-size: auto, 32px 32px;
   -webkit-font-smoothing: antialiased;
 }
 
 /* App shell */
+.app-scene {
+  min-height: 100vh;
+  position: relative;
+  overflow-x: clip;
+}
+
 .app-shell {
   max-width: 1200px;
   margin: 0 auto;
   padding: 24px;
   text-align: left;
+  position: relative;
+  z-index: 2;
+}
+
+.toy-decor {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.brick {
+  position: absolute;
+  width: 176px;
+  height: 88px;
+  border-radius: 12px;
+  box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.12), 0 10px 22px rgba(0, 0, 0, 0.14);
+  opacity: 0.22;
+}
+
+.brick::before {
+  content: "";
+  position: absolute;
+  inset: 10px 14px;
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.75) 0 10px, transparent 11px)
+      0 0 / 42px 42px;
+}
+
+.brick-red {
+  top: 8%;
+  left: -34px;
+  background: linear-gradient(180deg, #ff6f61, #e44b4f);
+}
+
+.brick-yellow {
+  top: 34%;
+  right: -40px;
+  background: linear-gradient(180deg, #ffd54f, #f4b400);
+}
+
+.brick-blue {
+  bottom: 9%;
+  left: 10%;
+  background: linear-gradient(180deg, #5ab4ff, #2f8ddb);
+}
+
+.minifig {
+  position: absolute;
+  width: 60px;
+  height: 108px;
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.18));
+  opacity: 0.42;
+}
+
+.minifig-head {
+  position: absolute;
+  top: 0;
+  left: 16px;
+  width: 28px;
+  height: 24px;
+  border-radius: 14px;
+  background: #ffd48a;
+}
+
+.minifig-body {
+  position: absolute;
+  top: 25px;
+  left: 10px;
+  width: 40px;
+  height: 42px;
+  border-radius: 8px;
+  background: #ff4f64;
+}
+
+.minifig-leg {
+  position: absolute;
+  top: 66px;
+  width: 18px;
+  height: 38px;
+  border-radius: 6px;
+  background: #2459a7;
+}
+
+.minifig-leg-left {
+  left: 11px;
+}
+
+.minifig-leg-right {
+  right: 11px;
+}
+
+.minifig-left {
+  bottom: 12%;
+  right: 8%;
+  transform: rotate(-3deg);
+}
+
+.minifig-right {
+  top: 16%;
+  left: 12%;
+  transform: rotate(4deg);
 }
 
 .app-header {
@@ -98,10 +209,11 @@ body {
 
 /* Card panels */
 .panel {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.94);
   border-radius: 10px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.04);
   padding: 20px;
+  backdrop-filter: blur(1.2px);
 }
 
 .panel h2 {
@@ -213,6 +325,17 @@ body {
 }
 
 @media (max-width: 640px) {
+  .brick {
+    width: 132px;
+    height: 66px;
+    opacity: 0.16;
+  }
+
+  .minifig {
+    transform: scale(0.8);
+    opacity: 0.25;
+  }
+
   .form-row {
     grid-template-columns: 1fr;
   }

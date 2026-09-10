@@ -262,8 +262,27 @@ function App() {
   };
 
   return (
-    <div className="app-shell">
-      <header className="app-header">
+    <div className="app-scene">
+      <div className="toy-decor" aria-hidden="true">
+        <div className="brick brick-red" />
+        <div className="brick brick-yellow" />
+        <div className="brick brick-blue" />
+        <div className="minifig minifig-left">
+          <span className="minifig-head" />
+          <span className="minifig-body" />
+          <span className="minifig-leg minifig-leg-left" />
+          <span className="minifig-leg minifig-leg-right" />
+        </div>
+        <div className="minifig minifig-right">
+          <span className="minifig-head" />
+          <span className="minifig-body" />
+          <span className="minifig-leg minifig-leg-left" />
+          <span className="minifig-leg minifig-leg-right" />
+        </div>
+      </div>
+
+      <div className="app-shell">
+        <header className="app-header">
         <h1>Student Availability & Task Requests</h1>
         <div className="header-actions">
           <div className="legend">
@@ -293,47 +312,48 @@ function App() {
             </button>
           )}
         </div>
-      </header>
+        </header>
 
-      {syncError && <p className="sync-message sync-error">{syncError}</p>}
-      {isLoading && <p className="sync-message">Loading shared data...</p>}
+        {syncError && <p className="sync-message sync-error">{syncError}</p>}
+        {isLoading && <p className="sync-message">Loading shared data...</p>}
 
-      {activePage === "availability" ? (
-        <main className="single-page-main">
-          <section className="panel">
-            <h2>Update student availability</h2>
-            <AvailabilityEditor
-              availability={availability}
-              onUpsertAvailability={handleUpsertAvailability}
-              onDeleteAvailability={handleDeleteAvailability}
-            />
-          </section>
-        </main>
-      ) : (
-        <main className="app-main">
-          <section className="panel calendar-panel">
-            <h2>Availability calendar</h2>
-            <AvailabilityCalendar availability={availability} />
-          </section>
+        {activePage === "availability" ? (
+          <main className="single-page-main">
+            <section className="panel">
+              <h2>Update student availability</h2>
+              <AvailabilityEditor
+                availability={availability}
+                onUpsertAvailability={handleUpsertAvailability}
+                onDeleteAvailability={handleDeleteAvailability}
+              />
+            </section>
+          </main>
+        ) : (
+          <main className="app-main">
+            <section className="panel calendar-panel">
+              <h2>Availability calendar</h2>
+              <AvailabilityCalendar availability={availability} />
+            </section>
 
-          <section className="panel form-panel">
-            <TaskRequestForm
-              onSubmit={handleNewTask}
-              getSuggestedAssignee={getSuggestedAssignee}
-              getAssigneeOptions={getAssigneeOptions}
-            />
-          </section>
+            <section className="panel form-panel">
+              <TaskRequestForm
+                onSubmit={handleNewTask}
+                getSuggestedAssignee={getSuggestedAssignee}
+                getAssigneeOptions={getAssigneeOptions}
+              />
+            </section>
 
-          <section className="panel list-panel">
-            <TaskList
-              tasks={tasks}
-              onUpdateTask={handleUpdateTask}
-              onDeleteTask={handleDeleteTask}
-              getAssigneeOptions={getAssigneeOptions}
-            />
-          </section>
-        </main>
-      )}
+            <section className="panel list-panel">
+              <TaskList
+                tasks={tasks}
+                onUpdateTask={handleUpdateTask}
+                onDeleteTask={handleDeleteTask}
+                getAssigneeOptions={getAssigneeOptions}
+              />
+            </section>
+          </main>
+        )}
+      </div>
     </div>
   );
 }
