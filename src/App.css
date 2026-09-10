@@ -412,6 +412,22 @@ body {
   gap: 6px;
 }
 
+.task-item-editing {
+  border-color: #c7e0f4;
+  background: #f3f9fd;
+}
+
+.task-edit-form {
+  gap: 10px;
+}
+
+.task-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
 .task-header {
   display: flex;
   align-items: center;

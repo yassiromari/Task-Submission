@@ -11,6 +11,7 @@ import {
   fetchTasks,
   isSupabaseConfigured,
   upsertAvailabilityEntries,
+  updateTaskEntry,
 } from "./lib/supabase";
 import {
   STUDENT_COLORS,
@@ -19,6 +20,7 @@ import {
   type StudentName,
   type TaskRequest,
   type TaskRequestDraft,
+  type TaskUpdateDraft,
 } from "./types";
 import "./App.css";
 
@@ -223,6 +225,22 @@ function App() {
     }
   };
 
+  const handleUpdateTask = async (taskDraft: TaskUpdateDraft): Promise<boolean> => {
+    if (!isSupabaseConfigured) return false;
+
+    try {
+      const updated = await updateTaskEntry(taskDraft);
+      setTasks((prev) =>
+        prev.map((task) => (task.id === updated.id ? updated : task)),
+      );
+      setSyncError(null);
+      return true;
+    } catch (error) {
+      setSyncError(`Could not update task: ${getErrorMessage(error)}`);
+      return false;
+    }
+  };
+
   return (
     <div className="app-shell">
       <header className="app-header">
@@ -287,7 +305,11 @@ function App() {
           </section>
 
           <section className="panel list-panel">
-            <TaskList tasks={tasks} />
+            <TaskList
+              tasks={tasks}
+              onUpdateTask={handleUpdateTask}
+              getAssigneeOptions={getAssigneeOptions}
+            />
           </section>
         </main>
       )}

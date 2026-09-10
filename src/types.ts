@@ -49,3 +49,5 @@ export type TaskRequestDraft = Omit<
 > & {
   selectedAssignee?: StudentName;
 };
+
+export type TaskUpdateDraft = Omit<TaskRequest, "createdAt">;

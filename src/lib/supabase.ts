@@ -1,5 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
-import type { StudentAvailability, TaskRequest, TaskRequestDraft } from "../types";
+import type {
+  StudentAvailability,
+  TaskRequest,
+  TaskRequestDraft,
+  TaskUpdateDraft,
+} from "../types";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -154,6 +159,36 @@ export async function createTaskEntry(
   const { data, error } = await client
     .from("tasks")
     .insert(payload)
+    .select(
+      "id, title, description, priority, deadline, assigned_student, clarification_meeting_needed, notes_or_links, requested_by, status, created_at",
+    )
+    .single();
+
+  if (error) throw error;
+  return mapTaskRowToModel(data as TaskRow);
+}
+
+export async function updateTaskEntry(
+  task: TaskUpdateDraft,
+): Promise<TaskRequest> {
+  const client = ensureSupabase();
+
+  const payload = {
+    title: task.title,
+    description: task.description,
+    priority: task.priority,
+    deadline: task.deadline,
+    assigned_student: task.assignedStudent,
+    clarification_meeting_needed: task.clarificationMeetingNeeded,
+    notes_or_links: task.notesOrLinks ?? null,
+    requested_by: task.requestedBy,
+    status: task.status,
+  };
+
+  const { data, error } = await client
+    .from("tasks")
+    .update(payload)
+    .eq("id", task.id)
     .select(
       "id, title, description, priority, deadline, assigned_student, clarification_meeting_needed, notes_or_links, requested_by, status, created_at",
     )
