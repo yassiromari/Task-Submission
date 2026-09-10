@@ -200,6 +200,31 @@ body {
   padding: 2px 4px;
 }
 
+.calendar-event-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.2;
+}
+
+.calendar-event-top {
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.calendar-event-sub {
+  font-size: 10px;
+  opacity: 0.95;
+}
+
+.calendar-event-note {
+  font-size: 10px;
+  opacity: 0.9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Task form */
 .task-form {
   display: flex;

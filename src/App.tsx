@@ -15,6 +15,7 @@ import {
   updateTaskEntry,
 } from "./lib/supabase";
 import {
+  AVAILABILITY_COLORS,
   STUDENT_COLORS,
   type AvailabilityStatus,
   type StudentAvailability,
@@ -277,10 +278,10 @@ function App() {
         <h1>Student Availability & Task Requests</h1>
         <div className="header-actions">
           <div className="legend">
-            {Object.entries(STUDENT_COLORS).map(([name, color]) => (
-              <div key={name} className="legend-item">
+            {Object.entries(AVAILABILITY_COLORS).map(([status, color]) => (
+              <div key={status} className="legend-item">
                 <span className="legend-swatch" style={{ background: color }} />
-                {name}
+                {status}
               </div>
             ))}
           </div>

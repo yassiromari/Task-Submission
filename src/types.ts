@@ -12,6 +12,12 @@ export const STUDENT_COLORS: Record<StudentName, string> = {
 
 export type AvailabilityStatus = "Available" | "Partially Available" | "Unavailable";
 
+export const AVAILABILITY_COLORS: Record<AvailabilityStatus, string> = {
+  Available: "#16a34a",
+  "Partially Available": "#f59e0b",
+  Unavailable: "#dc2626",
+};
+
 export type WorkLocation = "Office" | "Remote";
 
 export interface StudentAvailability {
