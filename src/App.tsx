@@ -6,10 +6,11 @@ import { TaskList } from "./components/TaskList";
 import { sampleAvailability } from "./data/sampleAvailability";
 import {
   createTaskEntry,
+  deleteAvailabilityEntry,
   fetchAvailability,
   fetchTasks,
   isSupabaseConfigured,
-  upsertAvailabilityEntry,
+  upsertAvailabilityEntries,
 } from "./lib/supabase";
 import {
   STUDENT_COLORS,
@@ -130,19 +131,16 @@ function App() {
   };
 
   const handleUpsertAvailability = async (
-    nextAvailability: Omit<StudentAvailability, "id">,
+    nextAvailability: Omit<StudentAvailability, "id">[],
   ): Promise<boolean> => {
     if (!isSupabaseConfigured) return false;
 
     try {
-      const saved = await upsertAvailabilityEntry(nextAvailability);
+      const saved = await upsertAvailabilityEntries(nextAvailability);
       setAvailability((prev) => {
-        const existing = prev.find((entry) => entry.id === saved.id);
-        if (existing) {
-          return prev.map((entry) => (entry.id === saved.id ? saved : entry));
-        }
-
-        return [saved, ...prev];
+        const merged = new Map(prev.map((entry) => [entry.id, entry]));
+        saved.forEach((entry) => merged.set(entry.id, entry));
+        return [...merged.values()];
       });
       setSyncError(null);
       return true;
@@ -151,6 +149,24 @@ function App() {
         error instanceof Error
           ? `Could not save availability: ${error.message}`
           : "Could not save availability.",
+      );
+      return false;
+    }
+  };
+
+  const handleDeleteAvailability = async (id: string): Promise<boolean> => {
+    if (!isSupabaseConfigured) return false;
+
+    try {
+      await deleteAvailabilityEntry(id);
+      setAvailability((prev) => prev.filter((entry) => entry.id !== id));
+      setSyncError(null);
+      return true;
+    } catch (error) {
+      setSyncError(
+        error instanceof Error
+          ? `Could not delete availability: ${error.message}`
+          : "Could not delete availability.",
       );
       return false;
     }
@@ -222,6 +238,7 @@ function App() {
             <AvailabilityEditor
               availability={availability}
               onUpsertAvailability={handleUpsertAvailability}
+              onDeleteAvailability={handleDeleteAvailability}
             />
           </section>
         </main>

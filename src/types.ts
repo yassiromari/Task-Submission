@@ -12,12 +12,16 @@ export const STUDENT_COLORS: Record<StudentName, string> = {
 
 export type AvailabilityStatus = "Available" | "Partially Available" | "Unavailable";
 
+export type WorkLocation = "Office" | "Remote";
+
 export interface StudentAvailability {
   id: string;
   student: StudentName;
   workDate: string; // ISO date string, e.g. "2026-06-30"
   availability: AvailabilityStatus;
-  location?: string;
+  location?: WorkLocation;
+  partialStartTime?: string; // 24h HH:mm
+  partialEndTime?: string; // 24h HH:mm
   note?: string;
 }
 

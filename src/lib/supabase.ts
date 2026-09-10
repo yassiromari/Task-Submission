@@ -15,7 +15,9 @@ interface AvailabilityRow {
   student: StudentAvailability["student"];
   work_date: string;
   availability: StudentAvailability["availability"];
-  location: string | null;
+  location: StudentAvailability["location"] | null;
+  partial_start_time: string | null;
+  partial_end_time: string | null;
   note: string | null;
 }
 
@@ -50,6 +52,8 @@ function mapAvailabilityRowToModel(row: AvailabilityRow): StudentAvailability {
     workDate: row.work_date,
     availability: row.availability,
     location: row.location ?? undefined,
+    partialStartTime: row.partial_start_time ?? undefined,
+    partialEndTime: row.partial_end_time ?? undefined,
     note: row.note ?? undefined,
   };
 }
@@ -74,7 +78,9 @@ export async function fetchAvailability(): Promise<StudentAvailability[]> {
   const client = ensureSupabase();
   const { data, error } = await client
     .from("availability")
-    .select("id, student, work_date, availability, location, note")
+    .select(
+      "id, student, work_date, availability, location, partial_start_time, partial_end_time, note",
+    )
     .order("work_date", { ascending: true });
 
   if (error) throw error;
@@ -94,27 +100,37 @@ export async function fetchTasks(): Promise<TaskRequest[]> {
   return (data as TaskRow[]).map(mapTaskRowToModel);
 }
 
-export async function upsertAvailabilityEntry(
-  entry: Omit<StudentAvailability, "id">,
-): Promise<StudentAvailability> {
+export async function upsertAvailabilityEntries(
+  entries: Omit<StudentAvailability, "id">[],
+): Promise<StudentAvailability[]> {
   const client = ensureSupabase();
+
+  const rows = entries.map((entry) => ({
+    student: entry.student,
+    work_date: entry.workDate,
+    availability: entry.availability,
+    location: entry.location ?? null,
+    partial_start_time: entry.partialStartTime ?? null,
+    partial_end_time: entry.partialEndTime ?? null,
+    note: entry.note ?? null,
+  }));
+
   const { data, error } = await client
     .from("availability")
-    .upsert(
-      {
-        student: entry.student,
-        work_date: entry.workDate,
-        availability: entry.availability,
-        location: entry.location ?? null,
-        note: entry.note ?? null,
-      },
-      { onConflict: "student,work_date" },
-    )
-    .select("id, student, work_date, availability, location, note")
-    .single();
+    .upsert(rows, { onConflict: "student,work_date" })
+    .select(
+      "id, student, work_date, availability, location, partial_start_time, partial_end_time, note",
+    );
 
   if (error) throw error;
-  return mapAvailabilityRowToModel(data as AvailabilityRow);
+  return (data as AvailabilityRow[]).map(mapAvailabilityRowToModel);
+}
+
+export async function deleteAvailabilityEntry(id: string): Promise<void> {
+  const client = ensureSupabase();
+  const { error } = await client.from("availability").delete().eq("id", id);
+
+  if (error) throw error;
 }
 
 export async function createTaskEntry(

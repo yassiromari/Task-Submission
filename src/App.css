@@ -331,6 +331,49 @@ body {
   padding: 8px 10px;
 }
 
+.weekday-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.weekday-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #d1d1d1;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: #323130;
+}
+
+.availability-item-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.delete-btn {
+  border: 1px solid #d13438;
+  color: #d13438;
+  background: #ffffff;
+  border-radius: 6px;
+  font-size: 12px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.delete-btn:hover {
+  background: #fde7e9;
+}
+
+.delete-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 /* Task list */
 .task-list ul {
   list-style: none;

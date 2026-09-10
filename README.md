@@ -73,7 +73,9 @@ create table if not exists availability (
    student text not null check (student in ('Yassir', 'Mihai')),
    work_date date not null,
    availability text not null check (availability in ('Available', 'Partially Available', 'Unavailable')),
-   location text,
+   location text check (location in ('Office', 'Remote')),
+   partial_start_time time,
+   partial_end_time time,
    note text,
    unique (student, work_date)
 );
@@ -91,6 +93,11 @@ create table if not exists tasks (
    status text not null check (status in ('New', 'In Progress', 'Blocked', 'Done')),
    created_at timestamptz not null default now()
 );
+
+-- If your availability table already exists, add the new fields:
+alter table availability
+   add column if not exists partial_start_time time,
+   add column if not exists partial_end_time time;
 ```
 
 3. Enable Row Level Security and add policies allowing reads/writes for your intended users.
