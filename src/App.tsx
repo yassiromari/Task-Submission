@@ -23,6 +23,7 @@ import {
 import "./App.css";
 
 const OPEN_STATUSES = new Set(["New", "In Progress", "Blocked"]);
+const assignmentWebhookUrl = import.meta.env.VITE_ASSIGNMENT_WEBHOOK_URL;
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
@@ -49,6 +50,34 @@ function toUserSyncError(error: unknown): string {
   }
 
   return `Supabase sync error: ${message}`;
+}
+
+async function notifyTaskAssigned(task: TaskRequest): Promise<void> {
+  if (!assignmentWebhookUrl) return;
+
+  const response = await fetch(assignmentWebhookUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      event: "task_assigned",
+      task: {
+        id: task.id,
+        title: task.title,
+        priority: task.priority,
+        deadline: task.deadline,
+        assignedStudent: task.assignedStudent,
+        requestedBy: task.requestedBy,
+        status: task.status,
+      },
+      createdAt: task.createdAt,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Teams webhook failed with status ${response.status}`);
+  }
 }
 
 function getAvailabilityScore(status: AvailabilityStatus | undefined): number {
@@ -216,6 +245,17 @@ function App() {
       console.log("New task request submitted:", task);
       setTasks((prev) => [task, ...prev]);
       setSyncError(null);
+
+      try {
+        await notifyTaskAssigned(task);
+      } catch (notificationError) {
+        setSyncError(
+          `Task saved, but Teams notification failed: ${getErrorMessage(
+            notificationError,
+          )}`,
+        );
+      }
+
       return true;
     } catch (error) {
       setSyncError(`Could not create task: ${getErrorMessage(error)}`);
