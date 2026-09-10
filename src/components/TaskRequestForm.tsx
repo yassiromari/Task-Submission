@@ -14,6 +14,7 @@ interface TaskRequestFormProps {
 
 const PRIORITIES: Priority[] = ["Low", "Medium", "High", "Urgent"];
 const STATUSES: TaskStatus[] = ["New", "In Progress", "Blocked", "Done"];
+const ALL_ASSIGNEES: StudentName[] = ["Yassir", "Mihai"];
 
 interface FormState {
   title: string;
@@ -83,7 +84,11 @@ export function TaskRequestForm({
     : null;
 
   const assigneeOptions = useMemo(
-    () => (form.deadline ? getAssigneeOptions(form.deadline) : []),
+    () => {
+      const available = form.deadline ? getAssigneeOptions(form.deadline) : [];
+      const remaining = ALL_ASSIGNEES.filter((name) => !available.includes(name));
+      return [...available, ...remaining];
+    },
     [form.deadline, getAssigneeOptions],
   );
 
@@ -167,7 +172,7 @@ export function TaskRequestForm({
             onChange={(e) =>
               setSelectedAssignee(e.target.value as "auto" | StudentName)
             }
-            disabled={!form.deadline || assigneeOptions.length === 0}
+            disabled={!form.deadline}
           >
             <option value="auto">
               {suggestedAssignee
@@ -227,7 +232,7 @@ export function TaskRequestForm({
       <button
         type="submit"
         className="submit-btn"
-        disabled={isSubmitting || !form.deadline || assigneeOptions.length === 0}
+        disabled={isSubmitting || !form.deadline}
       >
         {isSubmitting ? "Submitting..." : "Submit task request"}
       </button>
