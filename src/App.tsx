@@ -23,6 +23,9 @@ import {
   type TaskRequestDraft,
   type TaskUpdateDraft,
 } from "./types";
+import minifigScared from "./assets/image-1789029337672.png";
+import minifigHappy from "./assets/image-1789029349942.png";
+import brickArt from "./assets/hero.png";
 import "./App.css";
 
 const OPEN_STATUSES = new Set(["New", "In Progress", "Blocked"]);
@@ -264,21 +267,9 @@ function App() {
   return (
     <div className="app-scene">
       <div className="toy-decor" aria-hidden="true">
-        <div className="brick brick-red" />
-        <div className="brick brick-yellow" />
-        <div className="brick brick-blue" />
-        <div className="minifig minifig-left">
-          <span className="minifig-head" />
-          <span className="minifig-body" />
-          <span className="minifig-leg minifig-leg-left" />
-          <span className="minifig-leg minifig-leg-right" />
-        </div>
-        <div className="minifig minifig-right">
-          <span className="minifig-head" />
-          <span className="minifig-body" />
-          <span className="minifig-leg minifig-leg-left" />
-          <span className="minifig-leg minifig-leg-right" />
-        </div>
+        <img className="toy-img toy-minifig-left" src={minifigScared} alt="" />
+        <img className="toy-img toy-minifig-right" src={minifigHappy} alt="" />
+        <img className="toy-img toy-brick" src={brickArt} alt="" />
       </div>
 
       <div className="app-shell">
