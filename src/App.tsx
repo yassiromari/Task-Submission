@@ -119,6 +119,10 @@ function App() {
   }, []);
 
   const getSuggestedAssignee = (deadline: string): StudentName => {
+    return getAssigneeOptions(deadline)[0];
+  };
+
+  const getAssigneeOptions = (deadline: string): StudentName[] => {
     const students = Object.keys(STUDENT_COLORS) as StudentName[];
     const workloadByStudent = tasks.reduce(
       (acc, task) => {
@@ -137,6 +141,7 @@ function App() {
 
       return {
         student,
+        availabilityScore: getAvailabilityScore(dayAvailability?.availability),
         score:
           getAvailabilityScore(dayAvailability?.availability) -
           workloadByStudent[student] * 0.5,
@@ -150,7 +155,9 @@ function App() {
       return a.student.localeCompare(b.student);
     });
 
-    return scored[0].student;
+    const availableOnly = scored.filter((entry) => entry.availabilityScore > 0);
+    const base = availableOnly.length > 0 ? availableOnly : scored;
+    return base.map((entry) => entry.student);
   };
 
   const handleUpsertAvailability = async (
@@ -190,7 +197,8 @@ function App() {
   const handleNewTask = async (taskDraft: TaskRequestDraft): Promise<boolean> => {
     if (!isSupabaseConfigured) return false;
 
-    const assignedStudent = getSuggestedAssignee(taskDraft.deadline);
+    const assignedStudent =
+      taskDraft.selectedAssignee ?? getSuggestedAssignee(taskDraft.deadline);
 
     try {
       const task = await createTaskEntry(taskDraft, assignedStudent);
@@ -264,6 +272,7 @@ function App() {
             <TaskRequestForm
               onSubmit={handleNewTask}
               getSuggestedAssignee={getSuggestedAssignee}
+              getAssigneeOptions={getAssigneeOptions}
             />
           </section>
 

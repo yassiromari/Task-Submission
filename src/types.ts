@@ -46,4 +46,6 @@ export interface TaskRequest {
 export type TaskRequestDraft = Omit<
   TaskRequest,
   "id" | "assignedStudent" | "createdAt"
->;
+> & {
+  selectedAssignee?: StudentName;
+};

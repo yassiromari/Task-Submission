@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import type {
   Priority,
   StudentName,
@@ -9,6 +9,7 @@ import type {
 interface TaskRequestFormProps {
   onSubmit: (task: TaskRequestDraft) => Promise<boolean>;
   getSuggestedAssignee: (deadline: string) => StudentName;
+  getAssigneeOptions: (deadline: string) => StudentName[];
 }
 
 const PRIORITIES: Priority[] = ["Low", "Medium", "High", "Urgent"];
@@ -39,9 +40,13 @@ const INITIAL_STATE: FormState = {
 export function TaskRequestForm({
   onSubmit,
   getSuggestedAssignee,
+  getAssigneeOptions,
 }: TaskRequestFormProps) {
   const [form, setForm] = useState<FormState>(INITIAL_STATE);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedAssignee, setSelectedAssignee] = useState<"auto" | StudentName>(
+    "auto",
+  );
 
   const handleChange = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -60,11 +65,14 @@ export function TaskRequestForm({
       notesOrLinks: form.notesOrLinks.trim() || undefined,
       requestedBy: form.requestedBy.trim(),
       status: form.status,
+      selectedAssignee:
+        selectedAssignee === "auto" ? undefined : selectedAssignee,
     };
 
     const success = await onSubmit(taskDraft);
     if (success) {
       setForm(INITIAL_STATE);
+      setSelectedAssignee("auto");
     }
 
     setIsSubmitting(false);
@@ -73,6 +81,17 @@ export function TaskRequestForm({
   const suggestedAssignee = form.deadline
     ? getSuggestedAssignee(form.deadline)
     : "Yassir";
+
+  const assigneeOptions = useMemo(
+    () => (form.deadline ? getAssigneeOptions(form.deadline) : ["Yassir", "Mihai"]),
+    [form.deadline, getAssigneeOptions],
+  );
+
+  useEffect(() => {
+    if (selectedAssignee !== "auto" && !assigneeOptions.includes(selectedAssignee)) {
+      setSelectedAssignee("auto");
+    }
+  }, [assigneeOptions, selectedAssignee]);
 
   return (
     <form className="task-form" onSubmit={handleSubmit}>
@@ -142,8 +161,20 @@ export function TaskRequestForm({
         </label>
 
         <label className="form-field">
-          <span>Suggested assignee</span>
-          <input type="text" value={suggestedAssignee} readOnly />
+          <span>Assignee</span>
+          <select
+            value={selectedAssignee}
+            onChange={(e) =>
+              setSelectedAssignee(e.target.value as "auto" | StudentName)
+            }
+          >
+            <option value="auto">Auto ({suggestedAssignee})</option>
+            {assigneeOptions.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
         </label>
       </div>
 
