@@ -41,13 +41,15 @@ export interface TaskRequest {
   requestedBy: string;
   status: TaskStatus;
   createdAt: string; // ISO datetime
+  deletedAt?: string;
+  deletedBy?: string;
 }
 
 export type TaskRequestDraft = Omit<
   TaskRequest,
-  "id" | "assignedStudent" | "createdAt"
+  "id" | "assignedStudent" | "createdAt" | "deletedAt" | "deletedBy"
 > & {
   selectedAssignee?: StudentName;
 };
 
-export type TaskUpdateDraft = Omit<TaskRequest, "createdAt">;
+export type TaskUpdateDraft = Omit<TaskRequest, "createdAt" | "deletedAt" | "deletedBy">;

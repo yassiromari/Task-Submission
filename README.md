@@ -91,13 +91,20 @@ create table if not exists tasks (
    notes_or_links text,
    requested_by text not null,
    status text not null check (status in ('New', 'In Progress', 'Blocked', 'Done')),
-   created_at timestamptz not null default now()
+   created_at timestamptz not null default now(),
+   deleted_at timestamptz,
+   deleted_by text
 );
 
 -- If your availability table already exists, add the new fields:
 alter table availability
    add column if not exists partial_start_time time,
    add column if not exists partial_end_time time;
+
+-- If your tasks table already exists, add deleted audit fields:
+alter table public.tasks
+   add column if not exists deleted_at timestamptz,
+   add column if not exists deleted_by text;
 ```
 
 3. Enable Row Level Security and add policies allowing reads/writes for your intended users.

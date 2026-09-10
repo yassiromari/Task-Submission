@@ -38,6 +38,8 @@ interface TaskRow {
   requested_by: string;
   status: TaskRequest["status"];
   created_at: string;
+  deleted_at: string | null;
+  deleted_by: string | null;
 }
 
 function ensureSupabase() {
@@ -76,6 +78,8 @@ function mapTaskRowToModel(row: TaskRow): TaskRequest {
     requestedBy: row.requested_by,
     status: row.status,
     createdAt: row.created_at,
+    deletedAt: row.deleted_at ?? undefined,
+    deletedBy: row.deleted_by ?? undefined,
   };
 }
 
@@ -97,7 +101,7 @@ export async function fetchTasks(): Promise<TaskRequest[]> {
   const { data, error } = await client
     .from("tasks")
     .select(
-      "id, title, description, priority, deadline, assigned_student, clarification_meeting_needed, notes_or_links, requested_by, status, created_at",
+      "id, title, description, priority, deadline, assigned_student, clarification_meeting_needed, notes_or_links, requested_by, status, created_at, deleted_at, deleted_by",
     )
     .order("created_at", { ascending: false });
 
@@ -160,7 +164,7 @@ export async function createTaskEntry(
     .from("tasks")
     .insert(payload)
     .select(
-      "id, title, description, priority, deadline, assigned_student, clarification_meeting_needed, notes_or_links, requested_by, status, created_at",
+      "id, title, description, priority, deadline, assigned_student, clarification_meeting_needed, notes_or_links, requested_by, status, created_at, deleted_at, deleted_by",
     )
     .single();
 
@@ -190,7 +194,29 @@ export async function updateTaskEntry(
     .update(payload)
     .eq("id", task.id)
     .select(
-      "id, title, description, priority, deadline, assigned_student, clarification_meeting_needed, notes_or_links, requested_by, status, created_at",
+      "id, title, description, priority, deadline, assigned_student, clarification_meeting_needed, notes_or_links, requested_by, status, created_at, deleted_at, deleted_by",
+    )
+    .single();
+
+  if (error) throw error;
+  return mapTaskRowToModel(data as TaskRow);
+}
+
+export async function softDeleteTaskEntry(
+  id: string,
+  deletedBy: string,
+): Promise<TaskRequest> {
+  const client = ensureSupabase();
+
+  const { data, error } = await client
+    .from("tasks")
+    .update({
+      deleted_at: new Date().toISOString(),
+      deleted_by: deletedBy,
+    })
+    .eq("id", id)
+    .select(
+      "id, title, description, priority, deadline, assigned_student, clarification_meeting_needed, notes_or_links, requested_by, status, created_at, deleted_at, deleted_by",
     )
     .single();
 

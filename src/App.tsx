@@ -10,6 +10,7 @@ import {
   fetchAvailability,
   fetchTasks,
   isSupabaseConfigured,
+  softDeleteTaskEntry,
   upsertAvailabilityEntries,
   updateTaskEntry,
 } from "./lib/supabase";
@@ -128,7 +129,7 @@ function App() {
     const students = Object.keys(STUDENT_COLORS) as StudentName[];
     const workloadByStudent = tasks.reduce(
       (acc, task) => {
-        if (OPEN_STATUSES.has(task.status)) {
+        if (!task.deletedAt && OPEN_STATUSES.has(task.status)) {
           acc[task.assignedStudent] += 1;
         }
         return acc;
@@ -241,6 +242,25 @@ function App() {
     }
   };
 
+  const handleDeleteTask = async (
+    taskId: string,
+    deletedBy: string,
+  ): Promise<boolean> => {
+    if (!isSupabaseConfigured) return false;
+
+    try {
+      const deletedTask = await softDeleteTaskEntry(taskId, deletedBy);
+      setTasks((prev) =>
+        prev.map((task) => (task.id === deletedTask.id ? deletedTask : task)),
+      );
+      setSyncError(null);
+      return true;
+    } catch (error) {
+      setSyncError(`Could not delete task: ${getErrorMessage(error)}`);
+      return false;
+    }
+  };
+
   return (
     <div className="app-shell">
       <header className="app-header">
@@ -308,6 +328,7 @@ function App() {
             <TaskList
               tasks={tasks}
               onUpdateTask={handleUpdateTask}
+              onDeleteTask={handleDeleteTask}
               getAssigneeOptions={getAssigneeOptions}
             />
           </section>
