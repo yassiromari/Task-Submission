@@ -37,14 +37,6 @@ export function TaskList({ tasks, onUpdateTask, getAssigneeOptions }: TaskListPr
   const [draft, setDraft] = useState<TaskUpdateDraft | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  if (tasks.length === 0) {
-    return (
-      <div className="task-list empty">
-        <p>No task requests submitted yet.</p>
-      </div>
-    );
-  }
-
   const assigneeOptions = useMemo(() => {
     if (!draft) return [];
     const options = getAssigneeOptions(draft.deadline);
@@ -86,6 +78,14 @@ export function TaskList({ tasks, onUpdateTask, getAssigneeOptions }: TaskListPr
       cancelEditing();
     }
   };
+
+  if (tasks.length === 0) {
+    return (
+      <div className="task-list empty">
+        <p>No task requests submitted yet.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="task-list">

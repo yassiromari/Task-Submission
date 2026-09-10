@@ -172,7 +172,6 @@ export function TaskRequestForm({
             onChange={(e) =>
               setSelectedAssignee(e.target.value as "auto" | StudentName)
             }
-            disabled={!form.deadline}
           >
             <option value="auto">
               {suggestedAssignee
