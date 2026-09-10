@@ -8,7 +8,7 @@ import type {
 
 interface TaskRequestFormProps {
   onSubmit: (task: TaskRequestDraft) => Promise<boolean>;
-  getSuggestedAssignee: (deadline: string) => StudentName;
+  getSuggestedAssignee: (deadline: string) => StudentName | null;
   getAssigneeOptions: (deadline: string) => StudentName[];
 }
 
@@ -80,10 +80,10 @@ export function TaskRequestForm({
 
   const suggestedAssignee = form.deadline
     ? getSuggestedAssignee(form.deadline)
-    : "Yassir";
+    : null;
 
   const assigneeOptions = useMemo(
-    () => (form.deadline ? getAssigneeOptions(form.deadline) : ["Yassir", "Mihai"]),
+    () => (form.deadline ? getAssigneeOptions(form.deadline) : []),
     [form.deadline, getAssigneeOptions],
   );
 
@@ -167,8 +167,13 @@ export function TaskRequestForm({
             onChange={(e) =>
               setSelectedAssignee(e.target.value as "auto" | StudentName)
             }
+            disabled={!form.deadline || assigneeOptions.length === 0}
           >
-            <option value="auto">Auto ({suggestedAssignee})</option>
+            <option value="auto">
+              {suggestedAssignee
+                ? `Auto (${suggestedAssignee})`
+                : "Auto (No one marked available)"}
+            </option>
             {assigneeOptions.map((name) => (
               <option key={name} value={name}>
                 {name}
@@ -177,6 +182,15 @@ export function TaskRequestForm({
           </select>
         </label>
       </div>
+
+      {form.deadline && assigneeOptions.length > 0 && (
+        <p className="sync-message">Free on this date: {assigneeOptions.join(", ")}</p>
+      )}
+      {form.deadline && assigneeOptions.length === 0 && (
+        <p className="sync-message sync-error">
+          No one is marked available on this deadline yet.
+        </p>
+      )}
 
       <label className="form-field checkbox-field">
         <input
@@ -210,7 +224,11 @@ export function TaskRequestForm({
         />
       </label>
 
-      <button type="submit" className="submit-btn" disabled={isSubmitting}>
+      <button
+        type="submit"
+        className="submit-btn"
+        disabled={isSubmitting || !form.deadline || assigneeOptions.length === 0}
+      >
         {isSubmitting ? "Submitting..." : "Submit task request"}
       </button>
     </form>

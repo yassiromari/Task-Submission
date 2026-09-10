@@ -118,8 +118,8 @@ function App() {
     };
   }, []);
 
-  const getSuggestedAssignee = (deadline: string): StudentName => {
-    return getAssigneeOptions(deadline)[0];
+  const getSuggestedAssignee = (deadline: string): StudentName | null => {
+    return getAssigneeOptions(deadline)[0] ?? null;
   };
 
   const getAssigneeOptions = (deadline: string): StudentName[] => {
@@ -134,20 +134,25 @@ function App() {
       { Yassir: 0, Mihai: 0 } as Record<StudentName, number>,
     );
 
-    const scored = students.map((student) => {
-      const dayAvailability = availability.find(
-        (entry) => entry.student === student && entry.workDate === deadline,
-      );
+    const byStudent = new Map<StudentName, AvailabilityStatus>();
+    availability
+      .filter((entry) => entry.workDate === deadline)
+      .forEach((entry) => {
+        byStudent.set(entry.student, entry.availability);
+      });
 
-      return {
-        student,
-        availabilityScore: getAvailabilityScore(dayAvailability?.availability),
-        score:
-          getAvailabilityScore(dayAvailability?.availability) -
-          workloadByStudent[student] * 0.5,
-        workload: workloadByStudent[student],
-      };
-    });
+    const scored = students
+      .map((student) => {
+        const status = byStudent.get(student);
+
+        return {
+          student,
+          availabilityScore: getAvailabilityScore(status),
+          score: getAvailabilityScore(status) - workloadByStudent[student] * 0.5,
+          workload: workloadByStudent[student],
+        };
+      })
+      .filter((entry) => entry.availabilityScore > 0);
 
     scored.sort((a, b) => {
       if (b.score !== a.score) return b.score - a.score;
@@ -155,9 +160,7 @@ function App() {
       return a.student.localeCompare(b.student);
     });
 
-    const availableOnly = scored.filter((entry) => entry.availabilityScore > 0);
-    const base = availableOnly.length > 0 ? availableOnly : scored;
-    return base.map((entry) => entry.student);
+    return scored.map((entry) => entry.student);
   };
 
   const handleUpsertAvailability = async (
@@ -199,6 +202,13 @@ function App() {
 
     const assignedStudent =
       taskDraft.selectedAssignee ?? getSuggestedAssignee(taskDraft.deadline);
+
+    if (!assignedStudent) {
+      setSyncError(
+        "No one is marked available for that deadline. Pick a different date or add availability first.",
+      );
+      return false;
+    }
 
     try {
       const task = await createTaskEntry(taskDraft, assignedStudent);
