@@ -117,6 +117,20 @@ copy .env.example .env.local
 npm run dev
 ```
 
+## Secure Teams notifications (recommended)
+
+Do not call Power Automate webhook URLs from frontend code. In public repos/sites, frontend values can be extracted.
+
+Use a server-side trigger instead:
+
+1. In Supabase, open Database -> Webhooks.
+2. Create a webhook for table public.tasks.
+3. Events: INSERT and UPDATE.
+4. Target URL: your Power Automate webhook URL.
+5. Add filtering in Power Automate so it only notifies when assigned_student is new/changed.
+
+If a webhook URL was previously used in frontend builds, rotate it in Power Automate immediately.
+
 ---
 
 ## Phase 2 — Future Microsoft Teams integration
