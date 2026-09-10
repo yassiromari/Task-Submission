@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AvailabilityCalendar } from "./components/AvailabilityCalendar";
 import { AvailabilityEditor } from "./components/AvailabilityEditor";
 import { TaskRequestForm } from "./components/TaskRequestForm";
@@ -15,6 +15,19 @@ import {
 import "./App.css";
 
 const OPEN_STATUSES = new Set(["New", "In Progress", "Blocked"]);
+const AVAILABILITY_STORAGE_KEY = "student-calendar.availability";
+const TASKS_STORAGE_KEY = "student-calendar.tasks";
+
+function readStoredList<T>(key: string): T[] {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as T[]) : [];
+  } catch {
+    return [];
+  }
+}
 
 function getAvailabilityScore(status: AvailabilityStatus | undefined): number {
   switch (status) {
@@ -34,10 +47,21 @@ function App() {
   const [activePage, setActivePage] = useState<"dashboard" | "availability">(
     "dashboard",
   );
-  const [availability, setAvailability] = useState<StudentAvailability[]>(
-    sampleAvailability,
+  const [availability, setAvailability] = useState<StudentAvailability[]>(() => {
+    const stored = readStoredList<StudentAvailability>(AVAILABILITY_STORAGE_KEY);
+    return stored.length > 0 ? stored : sampleAvailability;
+  });
+  const [tasks, setTasks] = useState<TaskRequest[]>(() =>
+    readStoredList<TaskRequest>(TASKS_STORAGE_KEY),
   );
-  const [tasks, setTasks] = useState<TaskRequest[]>([]);
+
+  useEffect(() => {
+    localStorage.setItem(AVAILABILITY_STORAGE_KEY, JSON.stringify(availability));
+  }, [availability]);
+
+  useEffect(() => {
+    localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks));
+  }, [tasks]);
 
   const getSuggestedAssignee = (deadline: string): StudentName => {
     const students = Object.keys(STUDENT_COLORS) as StudentName[];
