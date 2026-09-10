@@ -31,6 +31,9 @@ function getAvailabilityScore(status: AvailabilityStatus | undefined): number {
 }
 
 function App() {
+  const [activePage, setActivePage] = useState<"dashboard" | "availability">(
+    "dashboard",
+  );
   const [availability, setAvailability] = useState<StudentAvailability[]>(
     sampleAvailability,
   );
@@ -117,41 +120,65 @@ function App() {
     <div className="app-shell">
       <header className="app-header">
         <h1>Student Availability & Task Requests</h1>
-        <div className="legend">
-          {Object.entries(STUDENT_COLORS).map(([name, color]) => (
-            <div key={name} className="legend-item">
-              <span className="legend-swatch" style={{ background: color }} />
-              {name}
-            </div>
-          ))}
+        <div className="header-actions">
+          <div className="legend">
+            {Object.entries(STUDENT_COLORS).map(([name, color]) => (
+              <div key={name} className="legend-item">
+                <span className="legend-swatch" style={{ background: color }} />
+                {name}
+              </div>
+            ))}
+          </div>
+
+          {activePage === "dashboard" ? (
+            <button
+              type="button"
+              className="nav-btn"
+              onClick={() => setActivePage("availability")}
+            >
+              Add availability
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="nav-btn nav-btn-secondary"
+              onClick={() => setActivePage("dashboard")}
+            >
+              Back to dashboard
+            </button>
+          )}
         </div>
       </header>
 
-      <main className="app-main">
-        <section className="panel">
-          <h2>Update student availability</h2>
-          <AvailabilityEditor
-            availability={availability}
-            onUpsertAvailability={handleUpsertAvailability}
-          />
-        </section>
+      {activePage === "availability" ? (
+        <main className="single-page-main">
+          <section className="panel">
+            <h2>Update student availability</h2>
+            <AvailabilityEditor
+              availability={availability}
+              onUpsertAvailability={handleUpsertAvailability}
+            />
+          </section>
+        </main>
+      ) : (
+        <main className="app-main">
+          <section className="panel calendar-panel">
+            <h2>Availability calendar</h2>
+            <AvailabilityCalendar availability={availability} />
+          </section>
 
-        <section className="panel calendar-panel">
-          <h2>Availability calendar</h2>
-          <AvailabilityCalendar availability={availability} />
-        </section>
+          <section className="panel form-panel">
+            <TaskRequestForm
+              onSubmit={handleNewTask}
+              getSuggestedAssignee={getSuggestedAssignee}
+            />
+          </section>
 
-        <section className="panel form-panel">
-          <TaskRequestForm
-            onSubmit={handleNewTask}
-            getSuggestedAssignee={getSuggestedAssignee}
-          />
-        </section>
-
-        <section className="panel list-panel">
-          <TaskList tasks={tasks} />
-        </section>
-      </main>
+          <section className="panel list-panel">
+            <TaskList tasks={tasks} />
+          </section>
+        </main>
+      )}
     </div>
   );
 }

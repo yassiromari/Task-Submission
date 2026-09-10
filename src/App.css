@@ -52,6 +52,13 @@ body {
   align-items: center;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
 .legend-item {
   display: inline-flex;
   align-items: center;
@@ -76,6 +83,11 @@ body {
 
 .calendar-panel {
   grid-column: 1 / -1;
+}
+
+.single-page-main {
+  display: grid;
+  grid-template-columns: 1fr;
 }
 
 @media (min-width: 980px) {
@@ -237,6 +249,31 @@ body {
 
 .submit-btn:active {
   background: #005a9e;
+}
+
+.nav-btn {
+  background: #0078d4;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.nav-btn:hover {
+  background: #106ebe;
+}
+
+.nav-btn-secondary {
+  background: #eff6fc;
+  color: #0f548c;
+  border: 1px solid #c7e0f4;
+}
+
+.nav-btn-secondary:hover {
+  background: #deecf9;
 }
 
 .availability-editor {
