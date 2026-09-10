@@ -24,6 +24,33 @@ import "./App.css";
 
 const OPEN_STATUSES = new Set(["New", "In Progress", "Blocked"]);
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof (error as { message?: unknown }).message === "string"
+  ) {
+    return (error as { message: string }).message;
+  }
+
+  return "Unknown error";
+}
+
+function toUserSyncError(error: unknown): string {
+  const message = getErrorMessage(error);
+
+  if (message.includes("availability.partial_start_time")) {
+    return "Supabase schema is missing partial-time columns. Run the ALTER TABLE command in README under Connect to Supabase, then refresh.";
+  }
+
+  return `Supabase sync error: ${message}`;
+}
+
 function getAvailabilityScore(status: AvailabilityStatus | undefined): number {
   switch (status) {
     case "Available":
@@ -76,11 +103,7 @@ function App() {
         setSyncError(null);
       } catch (error) {
         if (!isMounted) return;
-        setSyncError(
-          error instanceof Error
-            ? `Supabase sync error: ${error.message}`
-            : "Failed to load data from Supabase.",
-        );
+        setSyncError(toUserSyncError(error));
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -145,11 +168,7 @@ function App() {
       setSyncError(null);
       return true;
     } catch (error) {
-      setSyncError(
-        error instanceof Error
-          ? `Could not save availability: ${error.message}`
-          : "Could not save availability.",
-      );
+      setSyncError(toUserSyncError(error));
       return false;
     }
   };
@@ -163,11 +182,7 @@ function App() {
       setSyncError(null);
       return true;
     } catch (error) {
-      setSyncError(
-        error instanceof Error
-          ? `Could not delete availability: ${error.message}`
-          : "Could not delete availability.",
-      );
+      setSyncError(`Could not delete availability: ${getErrorMessage(error)}`);
       return false;
     }
   };
@@ -185,11 +200,7 @@ function App() {
       setSyncError(null);
       return true;
     } catch (error) {
-      setSyncError(
-        error instanceof Error
-          ? `Could not create task: ${error.message}`
-          : "Could not create task.",
-      );
+      setSyncError(`Could not create task: ${getErrorMessage(error)}`);
       return false;
     }
   };
