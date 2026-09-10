@@ -2,7 +2,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import type { EventContentArg, EventMountArg } from "@fullcalendar/core";
+import type { EventContentArg } from "@fullcalendar/core";
 import {
   AVAILABILITY_COLORS,
   type AvailabilityStatus,
@@ -48,24 +48,6 @@ export function AvailabilityCalendar({ availability }: AvailabilityCalendarProps
     );
   };
 
-  const setEventTooltip = (eventInfo: EventMountArg) => {
-    const { student, availability, location, note } = eventInfo.event.extendedProps as {
-      student: string;
-      availability: AvailabilityStatus;
-      location?: string;
-      note?: string;
-    };
-
-    const lines = [
-      student,
-      `Status: ${availability}`,
-      `Location: ${location ?? "Not set"}`,
-      note ? `Note: ${note}` : "",
-    ].filter(Boolean);
-
-    eventInfo.el.title = lines.join("\n");
-  };
-
   const getEventClassNames = (eventInfo: { event: { extendedProps: { note?: string } } }) => {
     const hasNote = Boolean(eventInfo.event.extendedProps.note?.trim());
     return hasNote ? ["calendar-has-note"] : [];
@@ -87,7 +69,6 @@ export function AvailabilityCalendar({ availability }: AvailabilityCalendarProps
         eventDisplay="block"
         eventClassNames={getEventClassNames}
         eventContent={renderEventContent}
-        eventDidMount={setEventTooltip}
       />
     </div>
   );
