@@ -38,3 +38,8 @@ export interface TaskRequest {
   status: TaskStatus;
   createdAt: string; // ISO datetime
 }
+
+export type TaskRequestDraft = Omit<
+  TaskRequest,
+  "id" | "assignedStudent" | "createdAt"
+>;

@@ -2,16 +2,16 @@ import { useState, type FormEvent } from "react";
 import type {
   Priority,
   StudentName,
-  TaskRequest,
+  TaskRequestDraft,
   TaskStatus,
 } from "../types";
 
 interface TaskRequestFormProps {
-  onSubmit: (task: TaskRequest) => void;
+  onSubmit: (task: TaskRequestDraft) => void;
+  getSuggestedAssignee: (deadline: string) => StudentName;
 }
 
 const PRIORITIES: Priority[] = ["Low", "Medium", "High", "Urgent"];
-const STUDENTS: StudentName[] = ["Yassir", "Mihai"];
 const STATUSES: TaskStatus[] = ["New", "In Progress", "Blocked", "Done"];
 
 interface FormState {
@@ -19,7 +19,6 @@ interface FormState {
   description: string;
   priority: Priority;
   deadline: string;
-  assignedStudent: StudentName;
   clarificationMeetingNeeded: boolean;
   notesOrLinks: string;
   requestedBy: string;
@@ -31,14 +30,16 @@ const INITIAL_STATE: FormState = {
   description: "",
   priority: "Medium",
   deadline: "",
-  assignedStudent: "Yassir",
   clarificationMeetingNeeded: false,
   notesOrLinks: "",
   requestedBy: "",
   status: "New",
 };
 
-export function TaskRequestForm({ onSubmit }: TaskRequestFormProps) {
+export function TaskRequestForm({
+  onSubmit,
+  getSuggestedAssignee,
+}: TaskRequestFormProps) {
   const [form, setForm] = useState<FormState>(INITIAL_STATE);
 
   const handleChange = <K extends keyof FormState>(key: K, value: FormState[K]) => {
@@ -48,23 +49,24 @@ export function TaskRequestForm({ onSubmit }: TaskRequestFormProps) {
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const task: TaskRequest = {
-      id: crypto.randomUUID(),
+    const taskDraft: TaskRequestDraft = {
       title: form.title.trim(),
       description: form.description.trim(),
       priority: form.priority,
       deadline: form.deadline,
-      assignedStudent: form.assignedStudent,
       clarificationMeetingNeeded: form.clarificationMeetingNeeded,
       notesOrLinks: form.notesOrLinks.trim() || undefined,
       requestedBy: form.requestedBy.trim(),
       status: form.status,
-      createdAt: new Date().toISOString(),
     };
 
-    onSubmit(task);
+    onSubmit(taskDraft);
     setForm(INITIAL_STATE);
   };
+
+  const suggestedAssignee = form.deadline
+    ? getSuggestedAssignee(form.deadline)
+    : "Yassir";
 
   return (
     <form className="task-form" onSubmit={handleSubmit}>
@@ -120,22 +122,6 @@ export function TaskRequestForm({ onSubmit }: TaskRequestFormProps) {
 
       <div className="form-row">
         <label className="form-field">
-          <span>Assigned student</span>
-          <select
-            value={form.assignedStudent}
-            onChange={(e) =>
-              handleChange("assignedStudent", e.target.value as StudentName)
-            }
-          >
-            {STUDENTS.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="form-field">
           <span>Status</span>
           <select
             value={form.status}
@@ -147,6 +133,11 @@ export function TaskRequestForm({ onSubmit }: TaskRequestFormProps) {
               </option>
             ))}
           </select>
+        </label>
+
+        <label className="form-field">
+          <span>Suggested assignee</span>
+          <input type="text" value={suggestedAssignee} readOnly />
         </label>
       </div>
 

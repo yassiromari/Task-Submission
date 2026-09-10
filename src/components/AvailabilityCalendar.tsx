@@ -11,7 +11,7 @@ interface AvailabilityCalendarProps {
 export function AvailabilityCalendar({ availability }: AvailabilityCalendarProps) {
   const events = availability.map((a) => ({
     id: a.id,
-    title: a.student,
+    title: `${a.student} - ${a.availability}`,
     start: a.workDate,
     allDay: true,
     color: STUDENT_COLORS[a.student],
